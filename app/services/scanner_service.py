@@ -8,9 +8,30 @@ from app.services.nuclei import run_nuclei_scan
 from app.services.headers import analyze_security_headers
 from app.services.waf import detect_waf
 
+from sqlalchemy.orm import Session
+from app.database.database import SessionLocal
+from app.database.models import ScanResult
+import json
 
 def is_tool_installed(tool_name: str) -> bool:
     return shutil.which(tool_name) is not None
+
+def save_scan_result(target: str, results: dict) -> None:
+    db: Session = SessionLocal()
+    try:
+        db_result = ScanResult(
+            target=target,
+            nmap=results.get("nmap"),
+            whatweb=results.get("whatweb"),
+            nikto=results.get("nikto"),
+            nuclei=results.get("nuclei"),
+            headers=json.dumps(results.get("headers", {})),
+            waf=results.get("waf"),
+        )
+        db.add(db_result)
+        db.commit()
+    finally:
+        db.close()
 
 
 def run_scans(target: str) -> Dict[str, str | dict]:
@@ -45,5 +66,6 @@ def run_scans(target: str) -> Dict[str, str | dict]:
         results["waf"] = detect_waf(target) if is_tool_installed("wafw00f") else "Error: wafw00f no está instalado."
     except Exception as e:
         results["waf"] = f"Error: {str(e)}"
-
+    
+    save_scan_result(target, results)
     return results

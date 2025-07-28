@@ -7,4 +7,4 @@ def sanitize_url(target: str) -> str:
 def run_nuclei_scan(target: str) -> str:
     sanitized = sanitize_url(target)
     cmd = ["nuclei", "-u", sanitized, "-t", "cves/", "-severity", "critical,high", "-timeout", "60"]
-    return run_command_safe(cmd, timeout=90)
+    return run_command_safe(cmd, timeout=300)

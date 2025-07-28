@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 from app.routes.scan import router as scan_router
+from app.database.database import engine
+from app.database.models import Base
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="DefensaPyme - API de Escaneo de Seguridad",
